@@ -1,0 +1,153 @@
+#include <ESP8266WiFi.h>
+WiFiClient client;
+// creating client 'object'
+
+WiFiServer server(80);
+//server communicates via port number
+80(http)
+const char* ssid = "Hotspot 1";
+
+//network name
+
+const char* password = "hotspotpwd";
+//password
+
+String command ="";
+// Set Motor Control Pins
+int rightMotor2 = 13;       // D7 - right Motor -
+int rightMotor1 = 15;      // D8 - right Motor +
+int leftMotor2 = 0;        // D3 - left Motor -
+int leftMotor1 = 2;       // D4 - left Motor +
+int eneLeftMotor = 12;    // D6 - enable Mortor Left
+int eneRightMotor = 14;   // D5 - enable Mortor Rightvoid setup()
+ 
+{
+Serial.begin(115200);
+pinMode(eneLeftMotor, OUTPUT);
+pinMode(eneRightMotor, OUTPUT);
+pinMode(leftMotor1, OUTPUT);
+pinMode(leftMotor2, OUTPUT);
+pinMode(rightMotor1, OUTPUT);
+pinMode(rightMotor2, OUTPUT);
+digitalWrite(eneLeftMotor,LOW);
+digitalWrite(eneRightMotor,LOW);
+digitalWrite(leftMotor1,LOW);
+digitalWrite(leftMotor2,LOW);
+digitalWrite(rightMotor1,LOW);
+digitalWrite(rightMotor2,LOW);
+WiFi.begin(ssid,password);
+Serial.print("Connecting to ");
+Serial.print(ssid);
+while (WiFi.status() != WL_CONNECTED) { 
+// Wait for the Wi-Fi to connect
+delay(500);
+Serial.print('.');}
+Serial.println('\n');
+Serial.println("Connection established!");
+Serial.print("IP address:\t");
+Serial.println(WiFi.localIP());
+server.begin();
+// Tells the server to begin listening for incoming connections
+}
+void loop()
+{
+client = server.available();
+if (!client) return;
+//empty return statement
+command = checkClient ();
+Serial.println(command);
+if (command == "forward") forwardMotor();else if (command == "reverse") reverseMotor();
+else if (command == "left") leftMotor();
+else if (command == "right") rightMotor();
+else if (command == "stop") stopMotor();
+sendBackEcho(command);
+// send command echo back to client
+command = "";
+}
+
+/* command motor forward */
+
+void forwardMotor(void)
+{
+digitalWrite(eneLeftMotor,HIGH);
+digitalWrite(eneRightMotor,HIGH);
+digitalWrite(leftMotor1,HIGH);
+digitalWrite(leftMotor2,LOW);
+digitalWrite(rightMotor1,HIGH);
+digitalWrite(rightMotor2,LOW);
+Serial.print("Forward");
+}
+
+/* command motor backward */
+
+void reverseMotor(void)
+{
+digitalWrite(eneLeftMotor,HIGH);
+digitalWrite(eneRightMotor,HIGH);
+digitalWrite(leftMotor1,LOW);
+digitalWrite(leftMotor2,HIGH);
+digitalWrite(rightMotor1,LOW);
+digitalWrite(rightMotor2,HIGH);
+}
+
+/* command motor turn left */
+
+void leftMotor(void)
+{
+digitalWrite(eneLeftMotor,HIGH);
+digitalWrite(eneRightMotor,HIGH);digitalWrite(leftMotor1,LOW);
+digitalWrite(leftMotor2,HIGH);
+digitalWrite(rightMotor1,HIGH);
+digitalWrite(rightMotor2,LOW);
+}
+
+/* command motor turn right */
+
+void rightMotor(void)
+{
+digitalWrite(eneLeftMotor,HIGH);
+digitalWrite(eneRightMotor,HIGH);
+digitalWrite(leftMotor1,HIGH);
+digitalWrite(leftMotor2,LOW);
+digitalWrite(rightMotor1,LOW);
+digitalWrite(rightMotor2,HIGH);
+}
+
+/* command motor stop */
+
+void stopMotor(void)
+{
+digitalWrite(eneLeftMotor,LOW);
+digitalWrite(eneRightMotor,LOW);
+digitalWrite(leftMotor1,LOW);
+digitalWrite(leftMotor2,LOW);
+digitalWrite(rightMotor1,LOW);
+digitalWrite(rightMotor2,LOW);
+}
+
+/* connecting WiFi */
+
+String checkClient (void)
+{
+while(!client.available()) delay(1);
+String request = client.readStringUntil('\r');
+request.remove(0, 5);
+request.remove(request.length()-9,9);
+return request;
+
+//reads first line of request}
+
+/* send command echo back to client */
+
+void sendBackEcho(String echo)
+{
+client.println("HTTP/1.1 200 OK");
+client.println("Content-Type: text/html");
+client.println("");
+client.println("<!DOCTYPE HTML>");
+client.println("<html>");
+client.println(echo);
+client.println("</html>");
+client.stop();
+delay(1);
+}
