@@ -1,0 +1,150 @@
+import speech_recognition as sr
+import pyaudio
+import pvporcupine
+import struct
+import http.client
+import time
+#test Connection
+robo_ip = "10.2.216.18"
+connection = http.client.HTTPConnection(robo_ip,80)
+"""connection.request("GET", "/xyz")
+response = connection.getresponse()
+print("Status {} and reason {}".format(response.status,response.reason))
+"""
+#headers = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)
+AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.75
+Safari/537.36'}
+present="forward"
+#ser = serial.Serial("COM13", 9600, timeout = 1) #Change your port name
+COM... and your baudrate
+def pass_to_bot(val):
+global present
+print("Hi")
+if val[0]:
+print("0")
+if(present != "forward"):
+try:
+present = "forward"
+connection.request("GET", "/forward")
+response = connection.getresponse()
+print("Status {} and reason
+{}".format(response.status,response.reason))
+#resp = requests.get(robo_ip + "forward", headers=headers)
+print("0done")time.sleep(3)
+return
+except Exception as e:
+print(e)
+elif val[1]:
+print("1")
+if(present != "left"):
+try:
+present = "left"
+connection.request("GET", "/left")
+response = connection.getresponse()
+print("Status {} and reason
+{}".format(response.status,response.reason))
+print("1done")
+time.sleep(3)
+return
+except Exception as e:
+print(e)
+elif val[2]:
+print("2")
+if(present != "right"):
+try:
+present = "right"
+connection.request("GET", "/right")
+response = connection.getresponse()
+print("Status {} and reason
+{}".format(response.status,response.reason))
+print("2done")
+time.sleep(3)
+return
+except Exception as e:
+print(e)
+elif val[4]:
+print("4")
+if (present != "stop"):try:
+present = "stop"
+connection.request("GET", "/stop")
+response = connection.getresponse()
+print("Status {} and reason {}".format(response.status,
+response.reason))
+print("4done")
+time.sleep(3)
+return
+except Exception as e:
+print(e)
+elif val[3]:
+print("3")
+if(present != "reverse"):
+try:
+present = "reverse"
+connection.request("GET", "/reverse")
+response = connection.getresponse()
+print("Status {} and reason
+{}".format(response.status,response.reason))
+print("3done")
+time.sleep(3)
+return
+except Exception as e:
+print(e)
+def decipher(q):
+val1 = 0
+val2 = 0
+val0 = 0
+val3 = 0
+val4 = 0
+if "forward" in q:
+val0=1
+elif "left" in q:
+val1=1
+elif "right" in q:val2=1
+elif "stop" in q:
+val3=1
+elif "reverse" in q:
+val4=1
+outputarr = [val0, val1, val2, val4, val3]
+print(outputarr)
+pass_to_bot(outputarr)
+return
+def listen_after_keyword(): #Hear what is being said.
+r=sr. Recognizer()
+r.energy_threshold = 300
+with sr.Microphone () as source:
+print("Listening...", end="")
+audio = r.listen (source)
+query= ''
+try:
+print("Recognizing... ", end="")
+query = r. recognize_google(audio, language= 'en-US')
+print("User Said", query)
+except Exception as e:
+print("Exception: " + str(e))
+decipher(query)
+return
+def main():
+porcupine=None
+pa=None
+audio_stream=None
+print("Call me JARVIS, I will help")
+try:
+porcupine=pvporcupine.create(keywords={"jarvis"})
+pa=pyaudio.PyAudio()audio_stream=pa.open(rate=porcupine.sample_rate,channels=1,format=pyau
+dio.paInt16,input=True,frames_per_buffer=porcupine.frame_length)
+while True:
+pcm=audio_stream.read(porcupine.frame_length)
+pcm = struct.unpack_from("h"*porcupine.frame_length, pcm)
+keyword_index = porcupine.process (pcm)
+if keyword_index >= 0:
+print ("Hotword Detected.. ", end="")
+listen_after_keyword()
+print("Call me JARVIS, I will help")
+finally:
+if porcupine is not None:
+porcupine.delete ()
+if audio_stream is not None:
+audio_stream.close()
+if pa is not None:
+pa.terminate()
+main()
